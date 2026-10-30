@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Threading.Tasks;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public float moveSpeed = 5f;
     private Vector2 movementInput;
-
-    // Update is called once per frame
+    private Rigidbody rb;
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
 
     private void OnMove(InputValue value)
     {
@@ -16,12 +17,36 @@ public class PlayerMovement : MonoBehaviour
         Debug.Log("Input: " + movementInput);
     }
 
-    void Update()
+ void Update()
     {
         float moveInputX = movementInput.x;
         float moveInputY = movementInput.y;
 
-        transform.Translate(Vector3.left * moveInputX * moveSpeed * Time.deltaTime, Space.Self);
-        transform.Translate(Vector3.back * moveInputY * moveSpeed * Time.deltaTime, Space.Self);
+        Vector3 sidewaysMovement = Vector3.left * moveInputX;
+        Vector3 forwardMovement = Vector3.back * moveInputY;
+
+        if (moveInputY != 0)
+        {
+            if (rb.SweepTest(forwardMovement.normalized, out RaycastHit sideHit, 0.1f))
+            {
+                //if (sideHit.collider.CompareTag("Wall"))
+                //{
+                    moveInputY = 0;
+                //}
+            }
+        }
+
+        if (moveInputX != 0)
+        {
+         if (rb.SweepTest(sidewaysMovement.normalized, out RaycastHit forwardHit, 0.1f))
+            {
+                //if (forwardHit.collider.CompareTag("Wall"))
+                //{
+                    moveInputX = 0;
+                //}
+            }   
+        }
+        Vector3 movement = Vector3.left * moveInputX + Vector3.back * moveInputY;
+        rb.linearVelocity = new Vector3(movement.x * moveSpeed, rb.linearVelocity.y, movement.z * moveSpeed);
     }
 }
